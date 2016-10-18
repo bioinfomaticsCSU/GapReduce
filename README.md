@@ -57,7 +57,7 @@ GapReduce
 		The third column is length of read;
 		The fourth column is insert size of read library;
 		The fifth column is standard deviation of insert size;
-		The sixth column represents whether the read library is mate-paired (0 denotes paired-end reads, 1 denotes mate-paired reads);
+		The sixth column represents whether the read library is paired-end reads (1 denotes paired-end reads, 0 denotes mate-paired reads);
 		The seventh column denotes which mapping tool will be used, it equals bwa or bowtie2;
 	<draft_sequence.fasta>:
 		The draft sequences of a genome which includes some gaps.
