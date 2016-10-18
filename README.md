@@ -46,10 +46,10 @@ GapReduce
 	Create a main directory (eg:GapReduce). Copy all source code to this directory.
 	Type "make all".
 
-3) Running.
-	Run command line:  
-		perl GapReduce.pl library.txt draft_sequence.fasta
+4) Running
 
+	Run command line:  
+	perl GapReduce.pl library.txt draft_sequence.fasta
 	<library.txt>:
 		Each line represents one read library.
 		The first column is the first mate read file (*.fastq);
@@ -63,26 +63,28 @@ GapReduce
 		The draft sequences of a genome which includes some gaps.
 
 4) Output:
+
 	The final filling result is named "scaffold_set_fill_gap.fa".
 
 5) Example:
-	one line in library.txt:
-		frag_1.fastq frag_2.fastq 101 180 20 0 bwa
 
-		
+	one line in library.txt:
+	frag_1.fastq frag_2.fastq 101 180 20 0 bwa
+
 Evaluation
 =================
 1) Before evaluation
+
 	Users should install MUMmer and add them to your PATH, which is used for aligning contigs to reference genomes.
 	MUMmer is available from http://mummer.sourceforge.net/;
 	Please type "nucmer" to check whether MUMmer works.
 	Please enter directory ./GapReduce/evaluation
 
 2) Simulating the draft sequences of a genome by contigs produced by a assembler
+
 	This module is a stand-alone module of GapReduce, which is available after installing GapReduce.
 	Run command line:
 		perl perfect_scaffold.pl contig_file reference_file perfect_scaffold_file gap_file
-		
 		<contig_file>:
 			The file which contains the contigs produced by a assembler;
 		<reference_file>:
@@ -91,22 +93,20 @@ Evaluation
 			The output name of the draft sequences of the genome;
 		<gap_file>:
 			The output name of the real sequence of gap regions in the draft sequences;
-			
+
 3) Evaluating the performance of gap filling tools
+
 	This module is a stand-alone module of GapReduce, which is avaiable after installing GapReduce.
 	Run command line:
 		perl evaluate_gap.pl draft_sequences.fasta gap_file.fasta draft_sequences_filled.fasta
-		
 		<draft_sequences.fasta>:
 			The original draft sequences of a genome before gap filling;
 		<gap_file.fasta>:
 			The real sequences of gaps in the reference genome;
 		<draft_sequences_filled.fasta>:
 			The gap filling result by a gap filling tool;
-		
-	The output of evaluation module is file named "fscore.fa". 
+	The evaluation results is stored in a file named "fscore.fa". 
 	In this file, it includes gap_count, gap_length, match_count, mismatch_count precision, recall, and fscore.
-		
 		gap_count is the count of gaps in the draft sequences of genomes;
 		gap_length is the length of all gaps;
 		match_count is the count of positions in gaps filled correctly;
@@ -114,5 +114,3 @@ Evaluation
 		precision is the ratio of match_count to match_count and mismatch_count; precision = match_count/(match_count + mismatch_count);
 		recall is the ratio of match_count to gap_length; recall = match_count/gap_length;
 		fscore is a composite metric to evaluate the gap filling results; fscore = 2*precision*recall/(precision + recall);
-
-		
