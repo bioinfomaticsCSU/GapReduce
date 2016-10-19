@@ -83,6 +83,7 @@ Evaluation
 2) Simulating the draft sequences of a genome by contigs produced by a assembler
 
 	This module is a stand-alone module of GapReduce, which is available after installing GapReduce.
+	First, it aligns contigs against the references of a genome by MUMmer. The regions of the references covered by contigs are kept. Any position of the references not covered by any contig is replaced by symbol ‘N’, which will be identified as gaps. Then, it outputs the changed references as the draft sequences of the genome, and the real sequences corresponding to gaps. 
 	Run command line:
 		perl perfect_scaffold.pl contig_file reference_file perfect_scaffold_file gap_file
 		<contig_file>:
@@ -97,6 +98,7 @@ Evaluation
 3) Evaluating the performance of gap filling tools
 
 	This module is a stand-alone module of GapReduce, which is avaiable after installing GapReduce.
+	It first breaks the draft sequences of a genome at the positions of the gaps, and produces contigs containing no ‘N’. Then, it performs MUMmer by using the contigs and the draft sequences filled by a gap filling tool as queries and targets, respectively. Based on the alignment position of the queries to targets, it extracts the sequence between two adjacent contigs as filled results of corresponding gap. It adopts the global algorithm Needleman-Wunsch to align the extracted gap sequences to the real gap sequences.
 	Run command line:
 		perl evaluate_gap.pl draft_sequences.fasta gap_file.fasta draft_sequences_filled.fasta
 		<draft_sequences.fasta>:
