@@ -60,7 +60,9 @@ GapReduce
 		The fourth column is insert size of read library;
 		The fifth column is standard deviation of insert size;
 		The sixth column represents whether the read library is paired-end reads (1 denotes paired-end reads, 0 denotes mate-paired reads);
-		The seventh column denotes which mapping tool will be used, it equals bwa or bowtie2;
+		The seventh column is a integer which should be shorter than read length;
+		The eighth column is a integer which should be shorter than read length and the integer of the seventh column; This integer is the length of the k-mers which are used for building de Bruijn graph; 
+		The ninth column denotes which mapping tool will be used, it equals bwa or bowtie2;
 
 4) Output:
 
@@ -69,7 +71,7 @@ GapReduce
 5) Example:
 
 	one line in library.txt:
-	frag_1.fastq frag_2.fastq 101 180 20 0 bwa
+	frag_1.fastq frag_2.fastq 101 180 20 0 61 31 bwa
 
 Evaluation
 =================
