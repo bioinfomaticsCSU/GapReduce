@@ -49,7 +49,9 @@ GapReduce
 4) Running
 
 	Run command line:  
-	perl GapReduce.pl library.txt draft_sequence.fasta
+	perl GapReduce.pl draft_sequence.fasta library.txt 
+	<draft_sequence.fasta>:
+		The draft sequences of a genome which includes some gaps.
 	<library.txt>:
 		Each line represents one read library.
 		The first column is the first mate read file (*.fastq);
@@ -59,8 +61,6 @@ GapReduce
 		The fifth column is standard deviation of insert size;
 		The sixth column represents whether the read library is paired-end reads (1 denotes paired-end reads, 0 denotes mate-paired reads);
 		The seventh column denotes which mapping tool will be used, it equals bwa or bowtie2;
-	<draft_sequence.fasta>:
-		The draft sequences of a genome which includes some gaps.
 
 4) Output:
 
