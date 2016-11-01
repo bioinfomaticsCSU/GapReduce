@@ -1,4 +1,33 @@
 use strict;
+	if(@ARGV != 2){
+		die "\nPlease input correct command line:  
+perl GapReduce.pl draft_sequence.fasta library.txt 
+<draft_sequence.fasta>:
+	The draft sequences of a genome.
+<library.txt>:
+	Each line represents one read library.
+	The first column: 
+		the first mate read file (*.fastq);
+	The sencond column: 
+		the second mate read file (*.fastq);
+	The third column: 
+		length of read;
+	The fourth column: 
+		insert size of read library;
+	The fifth column: 
+		standard deviation of insert size;
+	The sixth column:  
+		1 denotes paired-end reads, 0 denotes mate-paired reads;
+	The seventh column: 
+		a integer which should be shorter than read length;
+	The eighth column: 
+		a integer which should be shorter than read length and the 
+		integer of the seventh column; This integer is the length of 
+		the k-mers which are used for building de Bruijn graph; 
+	The ninth column: 
+		denotes which mapping tool will be used, it equals 
+		bwa or bowtie2;";
+	}
 	
 	my $library_number = 0;
 	my @library_name;
@@ -10,6 +39,9 @@ use strict;
 	my @library_sam;
 	my @library_bam;
 	
+	if(!(-e $ARGV[0]) or !(-e $ARGV[1])){
+		die "\n$ARGV[0] or $ARGV[1] does not exist! Please check input!\n";
+	}
 	my $scaffold_set = shift;
 	my $library_information = shift;
 	my $min_gap_distance = 0;
@@ -41,6 +73,9 @@ use strict;
 		$large_kmer_length[$library_number]=$infor[6];
 		$kmer_length[$library_number]=$infor[7];
 		$mapping_tool[$library_number]=$infor[8];
+		if(!(-e $infor[0]) or (!(-e $infor[1]))){
+			die "\n$infor[0] or $infor[1] does not exist! Please check input in $library_information!\n";
+		}
 		$library_number++;
 	}
 	
@@ -112,7 +147,7 @@ use strict;
 			$library_bam[2*$k+1] = "library_$k"."_right.bam";
 			if($mapping_tool[$k] eq "bowtie2"){
 				@temp = ("bowtie2-build $end_contig_set contigs");
-				`@temp`;
+				system(@temp) == 0 or die "\nThe command 'bowtie2-build' can not be found! Please install the mapping tool BWA\n";;
 				@temp = ("bowtie2 -x contigs $library_name[2*$k] -S $library_sam[2*$k]");
 				`@temp`;
 				@temp = ("bowtie2 -x contigs $library_name[2*$k+1] -S $library_sam[2*$k+1]");
@@ -120,7 +155,7 @@ use strict;
 			}
 			if($mapping_tool[$k] eq "bwa"){
 				@temp = ("bwa index $end_contig_set");
-				`@temp`;
+				system(@temp) == 0 or die "\nThe command 'bwa' can not be found! Please install the mapping tool BWA\n";
 				@temp = ("bwa mem $end_contig_set $library_name[2*$k] > $library_sam[2*$k]");
 				`@temp`;
 				@temp = ("bwa mem $end_contig_set $library_name[2*$k+1] > $library_sam[2*$k+1]");
@@ -128,12 +163,12 @@ use strict;
 			}
 			
 			@temp = ("samtools view -Sb $library_sam[2*$k] > $library_bam[2*$k]");
-			`@temp`;
+			system(@temp) == 0 or die "\nThe command 'samtools' can not be found! Please install the tool Samtools\n";
 			@temp = ("samtools view -Sb $library_sam[2*$k+1] > $library_bam[2*$k+1]");
 			`@temp`;
 			unlink glob $end_contig_set.".*";
-			#unlink glob $library_sam[2*$k];
-			#unlink glob $library_sam[2*$k+1];
+			unlink glob $library_sam[2*$k];
+			unlink glob $library_sam[2*$k+1];
 			
 			unlink glob "contigs.*";
 			
