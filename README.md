@@ -55,7 +55,7 @@ GapReduce
 	<library.txt>:
 		Each line represents one read library.
 		The first column is the first mate read file (*.fastq);
-		Tthe sencond column is the second mate read file (*.fastq);
+		The sencond column is the second mate read file (*.fastq);
 		The third column is length of read;
 		The fourth column is insert size of read library;
 		The fifth column is standard deviation of insert size;
