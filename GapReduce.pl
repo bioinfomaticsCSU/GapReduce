@@ -39,9 +39,6 @@ perl GapReduce.pl draft_sequence.fasta library.txt
 	my @library_sam;
 	my @library_bam;
 	
-	if(!(-e $ARGV[0]) or !(-e $ARGV[1])){
-		die "\n$ARGV[0] or $ARGV[1] does not exist! Please check input!\n";
-	}
 	my $scaffold_set = shift;
 	my $library_information = shift;
 	my $min_gap_distance = 0;
@@ -73,9 +70,6 @@ perl GapReduce.pl draft_sequence.fasta library.txt
 		$large_kmer_length[$library_number]=$infor[6];
 		$kmer_length[$library_number]=$infor[7];
 		$mapping_tool[$library_number]=$infor[8];
-		if(!(-e $infor[0]) or (!(-e $infor[1]))){
-			die "\n$infor[0] or $infor[1] does not exist! Please check input in $library_information!\n";
-		}
 		$library_number++;
 	}
 	
@@ -185,6 +179,8 @@ perl GapReduce.pl draft_sequence.fasta library.txt
 			@temp = ("./fillGapRead $scaffold_set $contig_set $min_gap_distance $library_bam[2*$k] $library_bam[2*$k+1] $max_insert_size $min_insert_size $interval_length $library_orientation[$k] $k");
 			`@temp`;
 			
+			unlink $library_bam[2*$k], $library_bam[2*$k+1];
+			
 			my $gap_region = "fill_gap_region.fa";
 			my $fill_gap_region = "fill_gap_region.fa";
 			my $fill_parameter;
@@ -215,8 +211,8 @@ perl GapReduce.pl draft_sequence.fasta library.txt
 			$real_iterative_count++;
 			$iterative_count--;
 		}
-		
 	}
+	unlink "graph.fa", "fill_gap_region.fa", "scaffold_end_contig_index.fa", "gap_information.fa", "end_contig_set.fa", "contig_set.fa";
 	
 	
 	
