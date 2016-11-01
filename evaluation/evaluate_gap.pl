@@ -60,6 +60,7 @@ use strict;
 		`@temp`;
 	}
 	
+	unlink $contig_set, $gap_information, "scaffold_end_contig_index.fa";
 	
 	
 	
