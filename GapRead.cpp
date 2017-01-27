@@ -782,7 +782,7 @@ void SearchSharedKmerRead(ScaffoldSetHead * scaffoldSetHead, GapRegionReadSet * 
 }
 
 
-void FillSingleGapByRead(ScaffoldSetHead * scaffoldSetHead, GapRegionReadSet * gapRegionReadSet, long int libraryIndex){
+void FillSingleGapByRead(ScaffoldSetHead * scaffoldSetHead, GapRegionReadSet * gapRegionReadSet, long int libraryIndex, char * outputName){
     
     long int gapIndex = 0;
     long int gapCount = gapRegionReadSet->gapCount;
@@ -790,8 +790,8 @@ void FillSingleGapByRead(ScaffoldSetHead * scaffoldSetHead, GapRegionReadSet * g
     GapRegionPairedMapReadSet * pairedMapReadSet = gapRegionReadSet->pairedMapReadSet;
     GapToContigIndex * gapToContigIndex = scaffoldSetHead->gapToContigIndex;
     
-    char * leftReadFileName = (char *)malloc(sizeof(char)*60);
-    char * rightReadFileName = (char *)malloc(sizeof(char)*60);
+    char * leftReadFileName = (char *)malloc(sizeof(char)*200);
+    char * rightReadFileName = (char *)malloc(sizeof(char)*200);
     FILE * fp;
     FILE * fp1;
     
@@ -799,8 +799,8 @@ void FillSingleGapByRead(ScaffoldSetHead * scaffoldSetHead, GapRegionReadSet * g
         //cout<<"gapIndex:"<<i<<endl;
         //cout<<"leftPosition------------"<<endl;
     
-        sprintf(leftReadFileName, "gap_read_out_put_%ld/leftReadSet_gapIndex_%ld.fa", libraryIndex, i);
-        sprintf(rightReadFileName, "gap_read_out_put_%ld/rightReadSet_gapIndex_%ld.fa", libraryIndex, i);
+        sprintf(leftReadFileName, "./%s/gap_read_out_put_%ld/leftReadSet_gapIndex_%ld.fa", outputName, libraryIndex, i);
+        sprintf(rightReadFileName, "./%s/gap_read_out_put_%ld/rightReadSet_gapIndex_%ld.fa", outputName, libraryIndex, i);
         fp = fopen(leftReadFileName, "w+");
         fp1 = fopen(rightReadFileName, "w+");
         

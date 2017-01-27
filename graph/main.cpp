@@ -17,10 +17,10 @@ using namespace std;
 int main(int argc, char *argv[])
 {  
     
-    char * gapRegionFileName = new char[30];
-    strcpy(gapRegionFileName, "fill_gap_region.fa");
+    //char * gapRegionFileName = new char[30];
+    //strcpy(gapRegionFileName, "fill_gap_region.fa");
     ofstream ocout;
-    ocout.open(gapRegionFileName, ios::app);
+    ocout.open(argv[11], ios::app);
     
     long int size = file_size(argv[1]) + file_size(argv[2]);
     if(size <= 0){
@@ -36,63 +36,72 @@ int main(int argc, char *argv[])
         return -1;
     }
     
-    char * contigSetFile = new char[20];
-    strcpy(contigSetFile, "contig_set.fa");
-    cout<<"aa"<<endl;
-    char * leftContig = GetContigFromContigSet(contigSetFile, atoi(argv[8]));
-    cout<<"bb"<<endl;
-    char * rightContig = GetContigFromContigSet(contigSetFile, atoi(argv[9]));
+    //char * contigSetFile = new char[20];
+    //strcpy(contigSetFile, "contig_set.fa");
+    //cout<<"aa"<<endl;
+    char * leftContig = GetContigFromContigSet(argv[12], atoi(argv[8]));
+    //cout<<"bb"<<endl;
+    char * rightContig = GetContigFromContigSet(argv[12], atoi(argv[9]));
     
     ReadSetHead * readSetHead = GetReadSetHead(argv[1], argv[2], atoi(argv[5]));
     readSetHead->insertSize = atoi(argv[3]);
     readSetHead->std = atoi(argv[4]);
     
-    cout<<"sdsd"<<endl;
-    //cout<<leftContig<<endl;
-    //cout<<rightContig<<endl;
-    cout<<"sdsd--"<<endl;
-    KmerSetHead * kmerSetHead = GetKmerSetHead(readSetHead, atoi(argv[7]), 1);
-    KmerSetHead * largeKmerSetHead = GetKmerSetHead(readSetHead, atoi(argv[6]), 1);
-    DBGraphHead * deBruijnGraphHead = CreateDBGraphHead(readSetHead, kmerSetHead);
-    char * gapRegion = NULL;
-    if(deBruijnGraphHead->deBruijnGraph == NULL){
-        gapRegion = (char *)malloc(sizeof(char)*(atoi(argv[10]) + 1));
-        for(long int i = 0; i < atoi(argv[10]); i++){
-            gapRegion[i] = 'N';
-        }
-    }else{
-        gapRegion = ExtractPathFromGraph(leftContig, rightContig, atoi(argv[10]), deBruijnGraphHead, readSetHead, kmerSetHead, largeKmerSetHead);
-    }
-    cout<<"large-------------kmer!"<<endl;
-    double ratio = RatioOfN(gapRegion);
-    char * gapRegionOfSmallFrequency = NULL;
+    //cout<<"cc--"<<atoi(argv[5])<<endl;
+    
+    long int step = atoi(argv[13]);
+    long int gapDistance = atoi(argv[10]);
     char * finalGapRegion = NULL;
-    cout<<"large-------------kmer!--"<<ratio<<endl;
-    if(ratio > 0){
-        KmerSetHead * kmerSetHeadOfSmallFrequency = GetKmerSetHead(readSetHead, atoi(argv[7]), 0);
-        KmerSetHead * largeKmerSetHeadOfSmallFrequency = GetKmerSetHead(readSetHead, atoi(argv[6]), 0);
-        DBGraphHead * deBruijnGraphHeadOfSmallFrequency = CreateDBGraphHead(readSetHead, kmerSetHeadOfSmallFrequency);
-        if(deBruijnGraphHeadOfSmallFrequency->deBruijnGraph == NULL){
-            gapRegionOfSmallFrequency = (char *)malloc(sizeof(char)*(atoi(argv[10]) + 1));
-            for(long int i = 0; i < atoi(argv[10]); i++){
-                gapRegionOfSmallFrequency[i] = 'N';
+    //cout<<"leftContig--:"<<leftContig<<endl;
+    //cout<<"rightContig--:"<<rightContig<<endl;
+    //cout<<"startfilling a gap:"<<endl;
+    for(long int fequency = atoi(argv[14]); fequency >= 0; fequency--){
+        double ratio = 0;
+        for(long int kmerLength = atoi(argv[6]); kmerLength >= atoi(argv[7]); kmerLength = kmerLength - step){
+            if(kmerLength%2 == 0){
+                kmerLength = kmerLength + 1;
             }
-        }else{
-            gapRegionOfSmallFrequency = ExtractPathFromGraph(leftContig, rightContig, atoi(argv[10]), deBruijnGraphHeadOfSmallFrequency, readSetHead, kmerSetHeadOfSmallFrequency, largeKmerSetHeadOfSmallFrequency);
+            ratio = 0;
+            KmerSetHead * kmerSetHead = GetKmerSetHead(readSetHead, kmerLength, fequency);
+            DBGraphHead * deBruijnGraphHead = CreateDBGraphHead(readSetHead, kmerSetHead);
+            char * gapRegion = NULL;
+            if(deBruijnGraphHead->deBruijnGraph == NULL){
+                gapRegion = (char *)malloc(sizeof(char)*(atoi(argv[10]) + 1));
+                for(long int i = 0; i < atoi(argv[10]); i++){
+                    gapRegion[i] = 'N';
+                }
+                gapRegion[atoi(argv[10])] = '\0';
+            }else{
+                gapRegion = ExtractPathFromGraph(leftContig, rightContig, gapDistance, deBruijnGraphHead, readSetHead, kmerSetHead, NULL);
+            }
+            
+            ratio = RatioOfN(gapRegion);
+            if(ratio == 0){
+                if(finalGapRegion == NULL){
+                    finalGapRegion = gapRegion;
+                }
+                break;
+            }else if(ratio != 1){
+                leftContig = MergeGapToContigLeft(leftContig, gapRegion);
+                rightContig = MergeGapToContigRight(rightContig, gapRegion);
+                finalGapRegion = gapRegionToFinal(finalGapRegion, gapRegion, gapDistance);
+                //cout<<"newGapDistance:"<<gapDistance<<endl;
+            }else{
+                if(finalGapRegion == NULL){
+                    finalGapRegion = gapRegion;
+                }
+            }
+            //cout<<"tempFinal:"<<finalGapRegion<<endl;
+        }
+        if(ratio == 0){
+            break;
         }
         
-        if(RatioOfN(gapRegionOfSmallFrequency) <= ratio){
-            finalGapRegion = gapRegionOfSmallFrequency;
-        }else{
-            finalGapRegion = gapRegion;
-        }
-    }else{
-        finalGapRegion = gapRegion;
     }
-    
-    
-    ocout<<">gap--"<<argv[1]<<endl;
+    //cout<<"endingfilling a gap:"<<endl;
+    ocout<<">gap--"<<argv[1]<<"--"<<atoi(argv[10])<<endl;
     ocout<<finalGapRegion<<endl;
+    
     
     /*
     char * file = new char[100];

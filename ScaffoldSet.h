@@ -96,7 +96,7 @@ MapRegionGapIndex * GetGapReadFromReadPositionOfContig(ScaffoldSetHead * scaffol
 
 ScaffoldSetHead * GetScaffoldSetFromScaffoldFile(char * scaffoldFileName);
 void SplitScaffoldToContig(ScaffoldSetHead * scaffoldSetHead, long int minGapDistance, char * gapInformationFile);
-void WriteContigSetFromScffoldSet(ScaffoldSetHead * scaffoldSetHead, char * contigSetFileName);
+void WriteContigSetFromScffoldSet(ScaffoldSetHead * scaffoldSetHead, char * contigSetFileName, char * endContigIndexFileName);
 void WriteEndContigFromScffoldSet(ScaffoldSetHead * scaffoldSetHead, long int subContigLength, long int intervalLength, char * endContigFileName);
 ContigSetHead * GetContigSet(char * contigSetFile);
 #endif 

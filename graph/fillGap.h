@@ -34,11 +34,15 @@ char * GetContigFromContigSet(char * contigSetFile, long int contigIndex);
 double ScoreTtest(KmerReadIndex * readIndex, ReadSet * readSet, long int mean, long int std, long int gap, bool isLeft);
 double ScoreDistribution(long int * distance, long int num, long int mean, long int std);
 int ScoreKmerCount(long int kmerCount[][2], double score[][2], long int rowCount);
-char * TranverseGraphFromNode(DBGraphHead * deBruijnGraphHead, ReadSetHead * readSetHead, KmerSetHead * largeKmerSetHead, KmerSetHead * kmerSetHead, char * startContig, long int startNodeIndex, long int gapDistance, long int & extendLength, bool isOut);
-char * GetGapRegion(char * leftGap, long int leftExtendLength, char * rightGap, long int rightExtendLength, long int gapDistance, long int cutLength);
+char * TranverseGraphFromNode(DBGraphHead * deBruijnGraphHead, ReadSetHead * readSetHead, KmerSetHead * kmerSetHead, char * startContig, long int startNodeIndex, long int endNodeIndex, long int gapDistance, long int & extendLength, bool isOut, bool & normalStop);
+char * GetGapRegion(char * leftGap, long int leftExtendLength, bool normalStopLeft, char * rightGap, long int rightExtendLength, bool normalStopRight, long int gapDistance, long int cutLength);
 char * ExtractPathFromGraph(char * leftContig, char * rightContig, long int gapDistance, DBGraphHead * deBruijnGraphHead, ReadSetHead * readSetHead, KmerSetHead * kmerSetHead, KmerSetHead * largeKmerSetHead);
 
 bool SingleKmerReadConsencusContig(char * read, char * kmer, char * contig, bool isOut);
 bool KmerConsencus(ReadSet * readSet, long int readLength, char * kmer, KmerReadIndex * temp, char * contig, bool isOut);
+
+char * MergeGapToContigLeft(char * contig, char * gap);
+char * MergeGapToContigRight(char * contig, char * gap);
+char * gapRegionToFinal(char * finalGapRegion, char * gap, long int & gapDistance);
 
 #endif

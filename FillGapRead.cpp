@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
     GapRegionReadSet * gapRegionReadSet = GetReadSetInGapRegion(scaffoldSetHead, argv[2], argv[4], argv[5], atoi(argv[6]), atoi(argv[7]), atoi(argv[8]), atoi(argv[9]));
     //cout<<"aa--end"<<endl;
     //WriteGapRegionReadSet(gapRegionReadSet, fileName);
-    FillSingleGapByRead(scaffoldSetHead, gapRegionReadSet, atoi(argv[10]));
+    FillSingleGapByRead(scaffoldSetHead, gapRegionReadSet, atoi(argv[10]), argv[11]);
     
     //SearchSharedKmerRead(scaffoldSetHead, gapRegionReadSet);
       

@@ -48,6 +48,17 @@ int main(int argc, char *argv[]){
         }
         for(long int i = startIndex; i <= endIndex; i++){
             cout<<i<<"--";
+            long int len = strlen(contigSetHead->contigSet[i].contig);
+            for(long int p = 0; p < len; p++){
+                if(contigSetHead->contigSet[i].contig[p] != 'A' && contigSetHead->contigSet[i].contig[p] != 'T' &&
+                contigSetHead->contigSet[i].contig[p] != 'G' && contigSetHead->contigSet[i].contig[p] != 'C' &&
+                contigSetHead->contigSet[i].contig[p] != 'N' && 
+                contigSetHead->contigSet[i].contig[p] != 'a' && contigSetHead->contigSet[i].contig[p] != 't' &&
+                contigSetHead->contigSet[i].contig[p] != 'g' && contigSetHead->contigSet[i].contig[p] != 'c' &&
+                contigSetHead->contigSet[i].contig[p] != 'n'){
+                    contigSetHead->contigSet[i].contig[p] = 'A';
+                }
+            }
             fprintf(fpScaffold, "%s", contigSetHead->contigSet[i].contig);
             if(i != endIndex){
                 fprintf(fpScaffold, "%s", gapSetHead->contigSet[gapIndex].contig);

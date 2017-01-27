@@ -820,7 +820,7 @@ DBGraphHead * CreateDBGraphHead(ReadSetHead * readSetHead, KmerSetHead * kmerSet
     
     deBruijnGraphHead->deBruijnGraph = OptimizeDBGraphSpace(deBruijnGraphHead->deBruijnGraph, deBruijnGraphHead->nodeNumber);
     
-    WriteDBGraph(deBruijnGraphHead->deBruijnGraph, deBruijnGraphHead->nodeNumber, graphAddress); 
+    //WriteDBGraph(deBruijnGraphHead->deBruijnGraph, deBruijnGraphHead->nodeNumber, graphAddress); 
     
     /*
     char * tempGapRegion = new char[709];

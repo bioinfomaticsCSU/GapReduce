@@ -127,6 +127,7 @@ double ScoreDistribution(long int * distance, long int num, long int mean, long 
 int ScoreKmerCount(long int kmerCount[][2], double score[][2], long int rowCount){
     
     for(int i = 0; i < rowCount; i++){
+        //cout<<"originalScore:"<<score[i][0]<<","<<score[i][1]<<endl;
         if(kmerCount[i][0] == 0 || kmerCount[i][1] == 0){
             //kmerCount[i][0] = 0;
             //kmerCount[i][1] = 0;
@@ -153,7 +154,10 @@ int ScoreKmerCount(long int kmerCount[][2], double score[][2], long int rowCount
             secondMaxRowIndex = i;
         }
     }
-    
+    //cout<<"rowIndex:"<<maxRowIndex<<","<<secondMaxRowIndex<<endl;
+    //cout<<"kmerCount:"<<maxCount<<","<<secondMaxCount<<endl;
+    //cout<<"kmerScore:"<<score[maxRowIndex][0]<<","<<score[maxRowIndex][1]<<endl;
+    //cout<<"kmerScore1:"<<score[secondMaxRowIndex][0]<<","<<score[secondMaxRowIndex][1]<<endl;
     if(maxCount != 0 && secondMaxCount ==0){
         return maxRowIndex;
     }else if(secondMaxCount != 0 && double(maxCount)/double(secondMaxCount) >= 2 && score[maxRowIndex][0] < 2 && score[maxRowIndex][1] < 2){
@@ -239,53 +243,51 @@ bool KmerConsencus(ReadSet * readSet, long int readLength, char * kmer, KmerRead
     
 }
 
-char * TranverseGraphFromNode(DBGraphHead * deBruijnGraphHead, ReadSetHead * readSetHead, KmerSetHead * largeKmerSetHead, KmerSetHead * kmerSetHead, char * startContig, long int startNodeIndex, long int gapDistance, long int & extendLength, bool isOut){
+char * TranverseGraphFromNode(DBGraphHead * deBruijnGraphHead, ReadSetHead * readSetHead, KmerSetHead * kmerSetHead, char * startContig, long int startNodeIndex, long int endNodeIndex, long int gapDistance, long int & extendLength, bool isOut, bool & normalStop){
     
     if(startNodeIndex < 0){
-        cout<<"startNode NULL"<<endl;
+        //cout<<"startNode NULL"<<endl;
         return NULL;
     }
-    cout<<"aa--"<<startNodeIndex<<endl;
+    //cout<<"aa--"<<startNodeIndex<<endl;
     DBGraph * deBruijnGraph = deBruijnGraphHead->deBruijnGraph;
     long int graphNodeCount = deBruijnGraphHead->nodeNumber;
     long int kmerLength = kmerSetHead->kmerLength;
     long int readLength = readSetHead->readLength;
-    long int largeKmerLength = largeKmerSetHead->kmerLength;
     
     char * kmer = (char *)malloc(sizeof(char)*(kmerLength + 1));
-    char * largeKmer = (char *)malloc(sizeof(char)*(largeKmerLength + 1));
-    cout<<"bb"<<endl;
+    //cout<<"bb"<<endl;
     int * visited = (int *)malloc(sizeof(int)*graphNodeCount);
     for(long int i = 0; i < graphNodeCount; i++){
         visited[i] = 0;
     }
-    cout<<"cc"<<endl;
+    //cout<<"cc"<<endl;
     long int index = 1;
     long int nodeIndex = startNodeIndex;
-    cout<<"outNode:"<<nodeIndex<<"--";
+    //cout<<"outNode:"<<nodeIndex<<"--";
     
     long int contigLength = 0;
     char * contig = NULL;
     if(startContig == NULL){
         contigLength = strlen(deBruijnGraph[nodeIndex].contig);
-        cout<<"dd--"<<contigLength<<endl;
+        //cout<<"dd--"<<contigLength<<endl;
         contig = (char *)malloc(sizeof(char)*(contigLength + 1));
-        cout<<"ff--"<<contigLength<<endl;
+        //cout<<"ff--"<<contigLength<<endl;
         strncpy(contig, deBruijnGraph[nodeIndex].contig, contigLength);
     }else{
         contigLength = strlen(startContig);
-        cout<<"dd--"<<contigLength<<endl;
+        //cout<<"dd--"<<contigLength<<endl;
         contig = (char *)malloc(sizeof(char)*(contigLength + 1));
-        cout<<"ff--"<<contigLength<<endl;
+        //cout<<"ff--"<<contigLength<<endl;
         strncpy(contig, startContig, contigLength);
     }
     contig[contigLength] = '\0';
     
-    cout<<"gg--"<<contig<<endl;
+    //cout<<"gg--"<<contig<<endl;
     
     //cout<<"outNode:"<<nodeIndex;
     while(index == 1){
-        cout<<"index"<<endl;
+        //cout<<"index"<<endl;
         if(visited[nodeIndex] > 2){
             break;
         }
@@ -309,7 +311,10 @@ char * TranverseGraphFromNode(DBGraphHead * deBruijnGraphHead, ReadSetHead * rea
                 nodeIndex = deBruijnGraph[nodeIndex].inNode->index;
             }
             
-            if(visited[nodeIndex] > 2){
+            if(visited[nodeIndex] > 2 || nodeIndex == endNodeIndex){
+                if(nodeIndex == endNodeIndex){
+                    normalStop = true;
+                }
                 break;
             }
 
@@ -332,10 +337,8 @@ char * TranverseGraphFromNode(DBGraphHead * deBruijnGraphHead, ReadSetHead * rea
             contigLength = tempContigLength;
             continue;
         }
-        cout<<"nodeIndex:"<<nodeIndex<<"--"<<nodeCount<<endl;
-        double scoreTtestOfLargeKmer[nodeCount][2];
+        //cout<<"nodeIndex:"<<nodeIndex<<"--"<<nodeCount<<endl;
         double scoreTtest[nodeCount][2];
-        long int largeKmerCount[nodeCount][2];
         long int kmerCount[nodeCount][2];
         long int * tempNodeIndex = new long int[nodeCount];
         GraphNode * tempGraphNode = NULL;
@@ -345,121 +348,11 @@ char * TranverseGraphFromNode(DBGraphHead * deBruijnGraphHead, ReadSetHead * rea
             tempGraphNode = deBruijnGraph[nodeIndex].inNode;
         }
         for(long int i = 0; i < nodeCount; i++){
-            scoreTtestOfLargeKmer[i][0] = 0;
-            scoreTtest[i][1] = 0;
-            largeKmerCount[i][0] = 0;
-            largeKmerCount[i][1] = 0;
+            scoreTtest[i][1] = 100;
             kmerCount[i][0] = 0;
             kmerCount[i][1] = 0;
             tempNodeIndex[i] = tempGraphNode->index;
             
-            if(contigLength >= largeKmerLength -1){
-                if(isOut == true){
-                    strncpy(largeKmer, contig + contigLength - largeKmerLength + 1, largeKmerLength-1);
-                    largeKmer[largeKmerLength - 1] = deBruijnGraph[tempGraphNode->index].contig[kmerLength - 1];
-                }else{
-                    largeKmer[0] = deBruijnGraph[tempGraphNode->index].contig[strlen(deBruijnGraph[tempGraphNode->index].contig) - kmerLength];
-                    strncpy(largeKmer+1, contig, largeKmerLength-1);
-                }
-                
-                largeKmer[largeKmerLength] = '\0';
-                cout<<"dfdfd--"<<largeKmer<<endl;
-                long int largeHashKey = SearchKmerOfKmerSet(largeKmer, largeKmerSetHead->leftKmerSet, largeKmerLength, largeKmerSetHead->leftKmerCount);
-                cout<<"dfdfd--"<<largeKmer<<endl;
-                long int largeHashKey1 = SearchKmerOfKmerSet(largeKmer, largeKmerSetHead->rightKmerSet, largeKmerLength, largeKmerSetHead->rightKmerCount);
-                if(gapDistance - extendLength > readSetHead->insertSize + 2*readSetHead->std){
-                    if(isOut == true){
-                        largeHashKey1 = -1;
-                    }else{
-                        largeHashKey = -1;
-                    }
-                }
-                if(largeHashKey != -1){
-                    largeKmerCount[i][0] = largeKmerSetHead->leftKmerSet[largeHashKey].kmerCount;
-                    KmerReadIndex * temp = largeKmerSetHead->leftKmerSet[largeHashKey].readIndex;
-                    cout<<"largeDistance:";
-                    long int distance = 0;
-                    long int * tempInsertSize = (long int *)malloc(sizeof(long int)*largeKmerCount[i][0]);
-                    long int p = 0;
-                    while(temp != NULL){
-                        
-                        if(false == SingleKmerReadConsencusContig(readSetHead->leftReadSet[temp->index].read, largeKmer, contig, isOut)){
-                            temp = temp->next;
-                            continue;
-                        }
-                        
-                        long int position = KMPIndexOfContig(readSetHead->leftReadSet[temp->index].read, largeKmer);
-                        if(isOut == true){
-                            tempInsertSize[p] = readSetHead->leftReadSet[temp->index].insertSize + extendLength + readSetHead->readLength - position - largeKmerLength + 1;
-                        }else{
-                            tempInsertSize[p] = readSetHead->leftReadSet[temp->index].insertSize + gapDistance - extendLength + readSetHead->readLength - position - largeKmerLength + 1;
-                        }
-                        
-                        cout<<tempInsertSize[p]<<"--";
-                        distance = distance +  tempInsertSize[p]; 
-                        temp = temp->next;
-                        p++;
-                    }
-                    /*
-                    cout<<p<<"--ss--"<<largeKmerCount[i][0]<<endl; 
-                    if(double(p)/double(largeKmerCount[i][0]) < 0.2){
-                        largeKmerCount[i][0] = 0;
-                    }else{
-                        largeKmerCount[i][0] = p;
-                    }
-                    */
-                    largeKmerCount[i][0] = p;
-                    //cout<<distance/largeKmerCount[i][0]<<endl;
-                    if(largeKmerCount[i][0] >= 1){
-                        scoreTtestOfLargeKmer[i][0] = ScoreDistribution(tempInsertSize, largeKmerCount[i][0], readSetHead->insertSize, readSetHead->std);
-                    }
-                    free(tempInsertSize);
-                    cout<<"Ttest:"<<scoreTtestOfLargeKmer[i][0]<<endl;
-                }
-                if(largeHashKey1 != -1){
-                    largeKmerCount[i][1] = largeKmerSetHead->rightKmerSet[largeHashKey1].kmerCount;
-                    KmerReadIndex * temp = largeKmerSetHead->rightKmerSet[largeHashKey1].readIndex;
-                    cout<<"largeDistance:";
-                    long int distance = 0;
-                    long int * tempInsertSize = (long int *)malloc(sizeof(long int)*largeKmerCount[i][1]);
-                    long int p = 0;
-                    while(temp != NULL){
-                        
-                        if(false == SingleKmerReadConsencusContig(readSetHead->rightReadSet[temp->index].read, largeKmer, contig, isOut)){
-                            temp = temp->next;
-                            continue;
-                        }
-                        
-                        long int position = KMPIndexOfContig(readSetHead->rightReadSet[temp->index].read, largeKmer);
-                        if(isOut == true){
-                            tempInsertSize[p] = readSetHead->rightReadSet[temp->index].insertSize + gapDistance - extendLength + position + largeKmerLength;
-                        }else{
-                            tempInsertSize[p] = readSetHead->rightReadSet[temp->index].insertSize + extendLength + position + 1;
-                        }
-                        
-                        cout<<tempInsertSize[p]<<"--";
-                        distance = distance + tempInsertSize[p]; 
-                        temp = temp->next;
-                        p++;
-                    }
-                    /*
-                    if(double(p)/double(largeKmerCount[i][1]) < 0.2){
-                        largeKmerCount[i][1] = 0;
-                    }else{
-                        largeKmerCount[i][1] = p;
-                    }
-                    */
-                    cout<<p<<"--s11s--"<<largeKmerCount[i][1]<<endl; 
-                    //cout<<distance/largeKmerCount[i][1]<<endl;
-                    largeKmerCount[i][1] = p;
-                    if(largeKmerCount[i][1] >= 1){
-                        scoreTtestOfLargeKmer[i][1] = ScoreDistribution(tempInsertSize, largeKmerCount[i][1], readSetHead->insertSize, readSetHead->std);
-                    }
-                    free(tempInsertSize);
-                    cout<<"Ttest:"<<scoreTtestOfLargeKmer[i][1]<<endl;
-                }
-                cout<<largeKmer<<endl;
-            }
             
             if(isOut == true){
                 strncpy(kmer, deBruijnGraph[nodeIndex].contig + strlen(deBruijnGraph[nodeIndex].contig) - kmerLength + 1, kmerLength-1);
@@ -469,20 +362,22 @@ char * TranverseGraphFromNode(DBGraphHead * deBruijnGraphHead, ReadSetHead * rea
                 strncpy(kmer+1, contig, kmerLength-1);
             }
             kmer[kmerLength] = '\0';
-            cout<<"kmer:"<<kmer<<endl;
+            //cout<<"kmer:"<<kmer<<endl;
             long int hashKey = SearchKmerOfKmerSet(kmer, kmerSetHead->leftKmerSet, kmerLength, kmerSetHead->leftKmerCount);
             long int hashKey1 = SearchKmerOfKmerSet(kmer, kmerSetHead->rightKmerSet, kmerLength, kmerSetHead->rightKmerCount);
             if(gapDistance - extendLength > readSetHead->insertSize + 2*readSetHead->std){
                 if(isOut == true){
+                    scoreTtest[i][1] = 0;
                     hashKey1 = -1;
                 }else{
+                    scoreTtest[i][0] = 0;
                     hashKey = -1;
                 }
             }
             if(hashKey != -1){
                 kmerCount[i][0] = kmerSetHead->leftKmerSet[hashKey].kmerCount;
                 KmerReadIndex * temp = kmerSetHead->leftKmerSet[hashKey].readIndex;
-                cout<<"Distance:";
+                //cout<<"Distance:";
                 long int distance = 0;
                 long int * tempInsertSize = (long int *)malloc(sizeof(long int)*kmerCount[i][0]);
                 long int p = 0;
@@ -505,27 +400,21 @@ char * TranverseGraphFromNode(DBGraphHead * deBruijnGraphHead, ReadSetHead * rea
                     p++;
                 }
                 
-                if(double(p)/double(kmerCount[i][0]) < 0.2){
-                    kmerCount[i][0] = 0;
-                }else{
-                    kmerCount[i][0] = p;
-                }
-                
-                cout<<p<<"--s22s--"<<kmerCount[i][0]<<endl; 
+                //cout<<p<<"--s22s--"<<kmerCount[i][0]<<endl; 
                 //cout<<distance/kmerCount[i][0]<<endl;
                 kmerCount[i][0] = p;
                 if(kmerCount[i][0] >= 1){
                     scoreTtest[i][0] = ScoreDistribution(tempInsertSize, kmerCount[i][0], readSetHead->insertSize, readSetHead->std);
                 }else{
-                    //scoreTtest[i][0] = 100;
+                    scoreTtest[i][0] = 100;
                 }
                 free(tempInsertSize);
-                cout<<"Ttest:"<<scoreTtest[i][0]<<endl;
+                //cout<<"Ttest:"<<i<<"--"<<scoreTtest[i][0]<<endl;
             }
             if(hashKey1 != -1){
                 kmerCount[i][1] = kmerSetHead->rightKmerSet[hashKey1].kmerCount;
                 KmerReadIndex * temp = kmerSetHead->rightKmerSet[hashKey1].readIndex;
-                cout<<"Distance:";
+                //cout<<"Distance:";
                 long int distance = 0;
                 long int * tempInsertSize = (long int *)malloc(sizeof(long int)*kmerCount[i][1]);
                 long int p = 0;
@@ -547,59 +436,37 @@ char * TranverseGraphFromNode(DBGraphHead * deBruijnGraphHead, ReadSetHead * rea
                     temp = temp->next;
                     p++;
                 }
-                /*
-                if(double(p)/double(kmerCount[i][1]) < 0.2){
-                    kmerCount[i][1] = 0;
-                }else{
-                    kmerCount[i][1] = p;
-                }
-                */
-                cout<<p<<"--s33s--"<<kmerCount[i][1]<<endl; 
+
+                //cout<<p<<"--s33s--"<<kmerCount[i][1]<<endl; 
                 //cout<<distance/kmerCount[i][1]<<endl;
                 kmerCount[i][1] = p;
                 if(kmerCount[i][1] >= 1){
                     scoreTtest[i][1] = ScoreDistribution(tempInsertSize, kmerCount[i][1], readSetHead->insertSize, readSetHead->std);
                 }else{
-                    //scoreTtest[i][1] = 100;
+                    scoreTtest[i][1] = 100;
                 }
                 free(tempInsertSize);
-                cout<<"Ttest:"<<scoreTtest[i][1]<<endl;
+                //cout<<"Ttest:"<<scoreTtest[i][1]<<endl;
             }
             cout<<kmer<<endl; 
             tempGraphNode = tempGraphNode->next;
         }
         
-        for(long int i = 0; i < nodeCount; i++){
-            cout<<largeKmerCount[i][0]<<"--"<<largeKmerCount[i][1]<<endl;
-            if(scoreTtestOfLargeKmer[i][0] > 2 || scoreTtestOfLargeKmer[i][1] > 2){
-                //largeKmerCount[i][0] = 0;
-                //largeKmerCount[i][1] = 0;
-            }
-            
-        }
-        int maxIndexOfLargeKmer = ScoreKmerCount(largeKmerCount, scoreTtestOfLargeKmer, nodeCount);
-        cout<<"largeMax--"<<maxIndexOfLargeKmer<<endl;
-        for(long int i = 0; i < nodeCount; i++){
-            cout<<kmerCount[i][0]<<"--"<<kmerCount[i][1]<<endl;
-            if(scoreTtest[i][0] > 2 || scoreTtest[i][1] > 2){
-                //kmerCount[i][0] = 0;
-                //kmerCount[i][1] = 0;
-            }
-        }
         int maxIndex = ScoreKmerCount(kmerCount, scoreTtest, nodeCount);
-        cout<<"max--"<<maxIndex<<endl;
+        //cout<<"max--"<<maxIndex<<endl;
         
         long int tempMaxIndex = -1;
-        if(maxIndexOfLargeKmer != -1){
-            tempMaxIndex = maxIndexOfLargeKmer;
-        }else if(maxIndex != -1){
+        if(maxIndex != -1){
             tempMaxIndex = maxIndex;
         }
         
         
         if(tempMaxIndex != -1){
             nodeIndex = tempNodeIndex[tempMaxIndex];
-            if(visited[nodeIndex] > 2){
+            if(visited[nodeIndex] > 2 || nodeIndex == endNodeIndex){
+                if(nodeIndex == endNodeIndex){
+                    normalStop = true;
+                }
                 break;
             }
             
@@ -629,21 +496,47 @@ char * TranverseGraphFromNode(DBGraphHead * deBruijnGraphHead, ReadSetHead * rea
         }
  
     }
-    cout<<"path_end"<<endl;
+    //cout<<"path_end"<<endl;
     free(kmer);
-    free(largeKmer);
     free(visited);
     return contig;
 }
 
-char * GetGapRegionFromSingle(char * gap, long int extendLength, long int gapDistance, bool isLeft){
+char * GetGapRegionFromSingle(char * gap, long int extendLength, bool normalStop, long int gapDistance, bool isLeft){
     
     if(gap == NULL || extendLength <= 0){
         return NULL;
     }
     long int gapLength = strlen(gap);
-    char * gapRegion = (char *)malloc(sizeof(char)*(gapDistance + 1));
+    /*
+    char * gapRegion = NULL;
+    if(normalStop == true){
+        gapRegion = (char *)malloc(sizeof(char)*(extendLength + 1));
+        if(isLeft == true){
+            strncpy(gapRegion, gap + gapLength - extendLength, extendLength);
+        }else{
+            strncpy(gapRegion, gap, extendLength);
+        }
+        gapRegion[extendLength] = '\0';
+    }else{
+        gapRegion = (char *)malloc(sizeof(char)*(extendLength + 10 + 1));
+        if(isLeft == true){
+            strncpy(gapRegion, gap + gapLength - extendLength, extendLength);
+        }else{
+            strncpy(gapRegion + 10, gap, extendLength);
+        }
+        for(long int i = 0; i < 10; i++){
+            if(isLeft == true){
+                gapRegion[extendLength + i] = 'N';
+            }else{
+                gapRegion[i] = 'N';
+            }
+        }
+        gapRegion[extendLength + 10] = '\0';
+    }
     
+    */
+    char * gapRegion = (char *)malloc(sizeof(char)*(gapDistance + 1));
     if(extendLength <= gapDistance){
         if(isLeft == true){
             strncpy(gapRegion, gap + gapLength - extendLength, extendLength);
@@ -666,11 +559,12 @@ char * GetGapRegionFromSingle(char * gap, long int extendLength, long int gapDis
         }
         gapRegion[gapDistance] = '\0';
     }
+    
     return gapRegion;
 
 }
 
-char * GetGapRegion(char * leftGap, long int leftExtendLength, char * rightGap, long int rightExtendLength, long int gapDistance, long int cutLength){
+char * GetGapRegion(char * leftGap, long int leftExtendLength, bool normalStopLeft, char * rightGap, long int rightExtendLength, bool normalStopRight, long int gapDistance, long int cutLength){
     
     long int leftGapLength = strlen(leftGap);
     long int rightGapLength = strlen(rightGap);
@@ -681,9 +575,78 @@ char * GetGapRegion(char * leftGap, long int leftExtendLength, char * rightGap, 
     if(rightExtendLength <= 0){
         rightExtendLength = 0;
     }
+
+    char * gapRegion = NULL;
+    /*
+    if(normalStopLeft == true && normalStopRight == true){
+        if(leftExtendLength >= rightExtendLength){
+            if(leftExtendLength > 0){
+                gapRegion = (char *)malloc(sizeof(char)*(leftExtendLength + 1));
+                strncpy(gapRegion, leftGap + leftGapLength - leftExtendLength, leftExtendLength);
+                gapRegion[leftExtendLength] = '\0';
+            }else{
+                return NULL;
+            }
+        }else{
+            if(rightExtendLength > 0){
+                gapRegion = (char *)malloc(sizeof(char)*(rightExtendLength + 1));
+                strncpy(gapRegion, rightGap, rightExtendLength);
+                gapRegion[rightExtendLength] = '\0';
+            }else{
+                return NULL;
+            }
+        }
+    }else if(normalStopLeft == true){
+        if(leftExtendLength >= rightExtendLength){
+            if(leftExtendLength > 0){
+                gapRegion = (char *)malloc(sizeof(char)*(leftExtendLength + 1));
+                strncpy(gapRegion, leftGap + leftGapLength - leftExtendLength, leftExtendLength);
+                gapRegion[leftExtendLength] = '\0';
+            }else{
+                return NULL;
+            }
+        }
+    }else if(normalStopRight == true){
+        if(rightExtendLength > 0){
+            gapRegion = (char *)malloc(sizeof(char)*(rightExtendLength + 1));
+            strncpy(gapRegion, rightGap, rightExtendLength);
+            gapRegion[rightExtendLength] = '\0';
+            
+        }else{
+            return NULL;
+        }
+    }else{
+        if(leftExtendLength + rightExtendLength <= gapDistance){
+            gapRegion = (char *)malloc(sizeof(char)*(gapDistance + 1));
+            for(long int i = 0; i < gapDistance; i++){
+                gapRegion[i] = 'N';
+            }
+            if(leftExtendLength > 0){
+                strncpy(gapRegion, leftGap + leftGapLength - leftExtendLength, leftExtendLength);
+            }
+            if(rightExtendLength > 0){
+                strncpy(gapRegion + gapDistance - rightExtendLength, rightGap, rightExtendLength);
+            }
+            gapRegion[gapDistance] = '\0';
+        }else{
+            gapRegion = (char *)malloc(sizeof(char)*(leftExtendLength + rightExtendLength + 10+ 1));
+            for(long int i = 0; i < leftExtendLength + rightExtendLength + 10; i++){
+                gapRegion[i] = 'N';
+            }
+            if(leftExtendLength > 0){
+                strncpy(gapRegion, leftGap + leftGapLength - leftExtendLength, leftExtendLength);
+            }
+            if(rightExtendLength > 0){
+                strncpy(gapRegion + leftExtendLength + rightExtendLength + 10 - rightExtendLength, rightGap, rightExtendLength);
+            }
+            gapRegion[leftExtendLength + rightExtendLength + 10] = '\0';
+        }
+    }
+    return gapRegion;
+    */
     
-    char * gapRegion = (char *)malloc(sizeof(char)*(gapDistance + 1));
-    
+    gapRegion = (char *)malloc(sizeof(char)*(gapDistance + 1));
+    //cout<<"fill---------"<<leftExtendLength<<"--"<<rightExtendLength<<"--"<<gapDistance<<endl;
     if(leftExtendLength + rightExtendLength <= gapDistance){
         strncpy(gapRegion, leftGap + leftGapLength - leftExtendLength, leftExtendLength);
         for(long int i = 0; i < gapDistance - leftExtendLength - rightExtendLength; i++){
@@ -693,29 +656,19 @@ char * GetGapRegion(char * leftGap, long int leftExtendLength, char * rightGap, 
         gapRegion[gapDistance] = '\0';
         cout<<leftGap<<endl;
         cout<<rightGap<<endl;
-        cout<<"fill--1"<<endl;
+        //cout<<"fill--1"<<endl;
         return gapRegion;
     }
     if(leftExtendLength >= gapDistance && rightExtendLength >= gapDistance){
-        /*
-        if(leftExtendLength > rightExtendLength){
-            strncpy(gapRegion, leftGap + leftGapLength - leftExtendLength, gapDistance);
-            gapRegion[gapDistance] = '\0';
-            return gapRegion;
-        }else{
-            strncpy(gapRegion, rightGap + rightExtendLength - gapDistance, gapDistance);
-            gapRegion[gapDistance] = '\0';
-            return gapRegion;
-        }
-        */
+        
         int t = 0;
         if(gapDistance%2!=0){
             t = 1;
         }
         strncpy(gapRegion, leftGap + leftGapLength - leftExtendLength, (gapDistance/2)+t);
-        strncpy(gapRegion, rightGap + rightExtendLength - gapDistance/2, gapDistance/2);
-        
-        
+        strncpy(gapRegion + (gapDistance/2)+t, rightGap + rightExtendLength - gapDistance/2, gapDistance/2);
+        gapRegion[gapDistance] = '\0';
+        return gapRegion;
     }
     if(leftExtendLength >= gapDistance){
         strncpy(gapRegion, leftGap + leftGapLength - leftExtendLength, gapDistance);
@@ -748,6 +701,7 @@ char * GetGapRegion(char * leftGap, long int leftExtendLength, char * rightGap, 
     }
     gapRegion[gapDistance] = '\0';
     return gapRegion;
+    
 }
 
 char * ExtractPathFromGraph(char * leftContig, char * rightContig, long int gapDistance, DBGraphHead * deBruijnGraphHead, ReadSetHead * readSetHead, KmerSetHead * kmerSetHead, KmerSetHead * largeKmerSetHead){
@@ -786,14 +740,14 @@ char * ExtractPathFromGraph(char * leftContig, char * rightContig, long int gapD
     tempLeftKmer[kmerLength] = '\0';
     tempRightKmer[kmerLength] = '\0';
     
-    cout<<tempLeftKmer<<"--"<<tempRightKmer<<endl;
+    //cout<<tempLeftKmer<<"--"<<tempRightKmer<<endl;
     tempLeftNodeIndex = FindKmerInDeBruijnGraph(tempLeftKmer, kmerLength, deBruijnGraphHead->deBruijnGraph, deBruijnGraphHead->nodeNumber, tempLeftKmerMapPosition);
     tempRightNodeIndex = FindKmerInDeBruijnGraph(tempRightKmer, kmerLength, deBruijnGraphHead->deBruijnGraph, deBruijnGraphHead->nodeNumber, tempRightKmerMapPosition);
     cout<<tempLeftNodeIndex<<"--"<<tempRightNodeIndex<<endl;
     long int leftExtendLength = 0;
     if(tempLeftNodeIndex >= 0){
         leftExtendLength = strlen(deBruijnGraphHead->deBruijnGraph[tempLeftNodeIndex].contig) - tempLeftKmerMapPosition - kmerLength - cutLength;
-        cout<<"leftNodeLength:"<<strlen(deBruijnGraphHead->deBruijnGraph[tempLeftNodeIndex].contig)<<endl;
+        //cout<<"leftNodeLength:"<<strlen(deBruijnGraphHead->deBruijnGraph[tempLeftNodeIndex].contig)<<endl;
         if(strlen(deBruijnGraphHead->deBruijnGraph[tempLeftNodeIndex].contig) < readSetHead->readLength){
             leftStartContig = (char *)malloc(sizeof(char)*(readSetHead->readLength + 1));
             strncpy(leftStartContig, leftContig + leftContigLength - cutLength - kmerLength - tempLeftKmerMapPosition - readSetHead->readLength + strlen(deBruijnGraphHead->deBruijnGraph[tempLeftNodeIndex].contig), readSetHead->readLength - strlen(deBruijnGraphHead->deBruijnGraph[tempLeftNodeIndex].contig));
@@ -804,7 +758,7 @@ char * ExtractPathFromGraph(char * leftContig, char * rightContig, long int gapD
     long int rightExtendLength = 0;
     if(tempRightNodeIndex >= 0){
         rightExtendLength = tempRightKmerMapPosition - cutLength;
-        cout<<"rightNodeLength:"<<strlen(deBruijnGraphHead->deBruijnGraph[tempRightNodeIndex].contig)<<endl;
+        //cout<<"rightNodeLength:"<<strlen(deBruijnGraphHead->deBruijnGraph[tempRightNodeIndex].contig)<<endl;
         if(strlen(deBruijnGraphHead->deBruijnGraph[tempRightNodeIndex].contig) < readSetHead->readLength){
             rightStartContig = (char *)malloc(sizeof(char)*(readSetHead->readLength + 1));
             strncpy(rightStartContig, deBruijnGraphHead->deBruijnGraph[tempRightNodeIndex].contig, strlen(deBruijnGraphHead->deBruijnGraph[tempRightNodeIndex].contig));
@@ -814,41 +768,43 @@ char * ExtractPathFromGraph(char * leftContig, char * rightContig, long int gapD
     }
     if(leftStartContig != NULL){
         //cout<<leftContig<<endl;
-        cout<<"leftStartContig"<<endl;
-        cout<<deBruijnGraphHead->deBruijnGraph[tempLeftNodeIndex].contig<<endl;
-        cout<<leftStartContig<<endl;
+        //cout<<"leftStartContig"<<endl;
+        //cout<<deBruijnGraphHead->deBruijnGraph[tempLeftNodeIndex].contig<<endl;
+        //cout<<leftStartContig<<endl;
     }
     if(rightStartContig != NULL){
         //cout<<rightContig<<endl;
-        cout<<"rightStartContig"<<endl;
-        cout<<deBruijnGraphHead->deBruijnGraph[tempRightNodeIndex].contig<<endl;
-        cout<<rightStartContig<<endl;
+        //cout<<"rightStartContig"<<endl;
+        //cout<<deBruijnGraphHead->deBruijnGraph[tempRightNodeIndex].contig<<endl;
+        //cout<<rightStartContig<<endl;
     }
     char * leftGap = NULL;
     char * rightGap = NULL;
-    cout<<"extendLength:"<<leftExtendLength<<"--"<<rightExtendLength<<endl;
-    leftGap = TranverseGraphFromNode(deBruijnGraphHead, readSetHead, largeKmerSetHead, kmerSetHead, leftStartContig, tempLeftNodeIndex, gapDistance, leftExtendLength, 1);
+    //cout<<"extendLength:"<<leftExtendLength<<"--"<<rightExtendLength<<endl;
+    bool normalStopLeft = false;
+    leftGap = TranverseGraphFromNode(deBruijnGraphHead, readSetHead, kmerSetHead, leftStartContig, tempLeftNodeIndex, tempRightNodeIndex, gapDistance, leftExtendLength, 1, normalStopLeft);
     cout<<"tt"<<endl;
     if(leftGap != NULL){
-        cout<<"gapRegionLeft:"<<leftGap<<endl;
-        
+        //cout<<"gapRegionLeft:"<<leftGap<<endl;
     }
-    cout<<"ff"<<endl;
-    rightGap = TranverseGraphFromNode(deBruijnGraphHead, readSetHead, largeKmerSetHead, kmerSetHead, rightStartContig, tempRightNodeIndex, gapDistance, rightExtendLength, 0);
+    //cout<<"ff"<<endl;
+    bool normalStopRight = false;
+    rightGap = TranverseGraphFromNode(deBruijnGraphHead, readSetHead, kmerSetHead, rightStartContig, tempRightNodeIndex, tempLeftNodeIndex, gapDistance, rightExtendLength, 0, normalStopRight);
     
     
     if(rightGap != NULL){
-        cout<<"gapRegionRight:"<<rightGap<<endl;
+        //cout<<"gapRegionRight:"<<rightGap<<endl;
         
     }
-    cout<<"extendLength:"<<leftExtendLength<<"--"<<rightExtendLength<<endl;
+    //cout<<"extendLength:"<<leftExtendLength<<"--"<<rightExtendLength<<endl;
+    //cout<<"normal:"<<normalStopLeft<<"--"<<normalStopRight<<endl;
     char * gapRegion = NULL;
     if(leftGap != NULL && rightGap != NULL){
-        gapRegion = GetGapRegion(leftGap, leftExtendLength, rightGap, rightExtendLength, gapDistance, cutLength);
+        gapRegion = GetGapRegion(leftGap, leftExtendLength, normalStopLeft, rightGap, rightExtendLength, normalStopRight, gapDistance, cutLength);
     }else if(leftGap != NULL && rightGap == NULL){
-        gapRegion = GetGapRegionFromSingle(leftGap, leftExtendLength, gapDistance, 1);
+        gapRegion = GetGapRegionFromSingle(leftGap, leftExtendLength, normalStopLeft, gapDistance, 1);
     }else if(leftGap == NULL && rightGap != NULL){
-        gapRegion = GetGapRegionFromSingle(rightGap, rightExtendLength, gapDistance, 0);
+        gapRegion = GetGapRegionFromSingle(rightGap, rightExtendLength, normalStopRight, gapDistance, 0);
     }
     if(gapRegion == NULL){
         gapRegion = (char *)malloc(sizeof(char)*(gapDistance + 1));
@@ -858,19 +814,105 @@ char * ExtractPathFromGraph(char * leftContig, char * rightContig, long int gapD
         gapRegion[gapDistance] = '\0';
     }
 
-    cout<<"finalGapRegion:"<<gapRegion<<endl;
-    cout<<"extract_path_end!"<<endl;
+    //cout<<"finalGapRegion:"<<gapRegion<<endl;
+    //cout<<"extract_path_end!"<<endl;
     if(leftGap != NULL){
-        cout<<"aa"<<endl;
+        //cout<<"aa"<<endl;
         free(leftGap);
     }
     if(rightGap != NULL){
-        cout<<"bb"<<endl;
+        //cout<<"bb"<<endl;
         free(rightGap);
     }
     
-    cout<<"extract_path_end!"<<endl;
+    //cout<<"extract_path_end!"<<endl;
     return gapRegion;
+}
+
+char * MergeGapToContigLeft(char * contig, char * gap){
+    long int gapLength = strlen(gap);
+    long int extendLength = 0;
+    for(long int i = 0; i < gapLength; i++){
+        if(gap[i] == 'N' || gap[i] == 'n'){
+            break;    
+        }
+        extendLength++;
+    }
+    if(extendLength == 0){
+        return contig;
+    }
+    
+    long int newContigLength = strlen(contig) + extendLength + 1;
+    char * newContig = (char *)malloc(sizeof(char)*newContigLength);
+    strncpy(newContig, contig, strlen(contig));
+    strncpy(newContig + strlen(contig), gap, extendLength);
+    newContig[newContigLength - 1] = '\0';
+    free(contig);
+    return newContig;
+}
+
+char * MergeGapToContigRight(char * contig, char * gap){
+    long int gapLength = strlen(gap);
+    long int extendLength = 0;
+    for(long int i = 0; i < gapLength; i++){
+        if(gap[gapLength - i - 1] == 'N' || gap[gapLength - i - 1] == 'n'){
+            break;    
+        }
+        extendLength++;
+    }
+    if(extendLength == 0){
+        return contig;
+    }
+    
+    long int newContigLength = strlen(contig) + extendLength + 1;
+    char * newContig = (char *)malloc(sizeof(char)*newContigLength);
+    strncpy(newContig + extendLength, contig, strlen(contig));
+    strncpy(newContig, gap + gapLength - extendLength, extendLength);
+    newContig[newContigLength - 1] = '\0';
+    free(contig);
+    return newContig;
+}
+
+char * gapRegionToFinal(char * finalGapRegion, char * gap, long int & gapDistance){
+    gapDistance = 0;
+    long int gapLength = strlen(gap);
+    for(long int i = 0; i < gapLength; i++){
+        if(gap[i] == 'N' || gap[i] == 'n'){
+            gapDistance++;
+        }
+    }
+    if(finalGapRegion == NULL){
+        return gap;
+    }
+    long int finalLength = strlen(finalGapRegion);
+    
+    long int length = 0;
+    long int start = -1;
+    long int end = -1;
+    for(long int i = 0; i < finalLength; i++){
+        if(finalGapRegion[i] != 'N' && finalGapRegion[i] != 'n'){
+            length++;
+        }
+        if((finalGapRegion[i] == 'N' || finalGapRegion[i] == 'n') && start == -1){
+            start = i;
+        }
+        if(finalGapRegion[i] != 'N' && finalGapRegion[i] != 'n' && start != -1 && end == -1){
+            end = i;
+        }
+    }
+    if(end == -1){
+        end = finalLength - 1;
+    }else{
+        end = end - 1;
+    }
+    
+    char * contig = (char *)malloc(sizeof(char)*(length + gapLength + 1));
+    strncpy(contig, finalGapRegion, start);
+    strncpy(contig + start, gap, gapLength);
+    strncpy(contig + start + gapLength, finalGapRegion + end + 1, finalLength - end - 1);
+    contig[length + gapLength]='\0';
+    free(finalGapRegion);
+    return contig;
 }
 
 

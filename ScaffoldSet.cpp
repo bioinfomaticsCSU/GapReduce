@@ -181,7 +181,7 @@ ScaffoldSetHead * GetScaffoldSetFromScaffoldFile(char * scaffoldFileName){
     }
     
     long int scaffoldIndex = -1;
-    
+    long int allocateLength = 0;
     while((fgets(scaffold, maxSize, fp)) != NULL){ 
        
        if(scaffold[0] == '>'){  
@@ -207,26 +207,34 @@ ScaffoldSetHead * GetScaffoldSetFromScaffoldFile(char * scaffoldFileName){
        long int scaffoldLength = 0;
        char * tempScaffold = NULL;
        if(scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold != NULL){
-           scaffoldLength = scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffoldLength;
-           tempScaffold = (char *)malloc(sizeof(char)*(scaffoldLength+1));
-           strncpy(tempScaffold, scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold, scaffoldLength);
-           free(scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold);
+           if(scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffoldLength + extendLength >= allocateLength){
+               scaffoldLength = scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffoldLength;   
+               tempScaffold = (char *)malloc(sizeof(char)*(scaffoldLength+1));  
+               strncpy(tempScaffold, scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold, scaffoldLength);  
+               free(scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold);   
+               scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold = (char *)malloc(sizeof(char)*(allocateLength + maxSize + 1));
+               strncpy(scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold, tempScaffold, scaffoldLength);
+               allocateLength = allocateLength + maxSize + 1;
                
-           scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold = (char *)malloc(sizeof(char)*(scaffoldLength + extendLength + 1));
-           strncpy(scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold, tempScaffold, scaffoldLength);
-                   
-           strncpy(scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold + scaffoldLength, scaffold, extendLength);
-           scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold[scaffoldLength + extendLength] = '\0';
+               strncpy(scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold + scaffoldLength, scaffold, extendLength);
+               scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold[scaffoldLength + extendLength] = '\0';    
+               scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffoldLength = scaffoldLength + extendLength;
+               
+               free(tempScaffold);  
+                     
+           }else{
+               strncpy(scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold + scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffoldLength, scaffold, extendLength);
+               scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold[scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffoldLength + extendLength] = '\0';
+               scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffoldLength = scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffoldLength + extendLength;
+           }   
            
-           scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffoldLength = scaffoldLength + extendLength;
-           
-           free(tempScaffold);
        }else{
-           scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold = (char *)malloc(sizeof(char)*(extendLength+1));
+           scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold = (char *)malloc(sizeof(char)*(maxSize+1));
            strncpy(scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold, scaffold, extendLength);
            scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffold[extendLength] = '\0';
            scaffoldSetHead->scaffoldSet[scaffoldIndex].scaffoldLength = extendLength;
-       }    
+           allocateLength = maxSize + 1;
+       }   
     }  
     
     fclose(fp);
@@ -443,11 +451,9 @@ void SplitScaffoldToContig(ScaffoldSetHead * scaffoldSetHead, long int minGapDis
     */
 }
 
-void WriteContigSetFromScffoldSet(ScaffoldSetHead * scaffoldSetHead, char * contigSetFileName){
+void WriteContigSetFromScffoldSet(ScaffoldSetHead * scaffoldSetHead, char * contigSetFileName, char * endContigIndexFileName){
     
     FILE * fpEndContigIndex;
-    char endContigIndexFileName[35];
-    strcpy(endContigIndexFileName, "scaffold_end_contig_index.fa");
     fpEndContigIndex = fopen(endContigIndexFileName, "w+");
     
     

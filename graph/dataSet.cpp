@@ -243,17 +243,17 @@ ReadSetHead * GetReadSetHead(char * leftReadAddress, char * rightReadAddress, bo
     readSetHead->leftReadCount = 0;
     readSetHead->rightReadCount = 0;
     readSetHead->isPaired = isPaired;
-    
+    cout<<"GetStart"<<endl;
     readSetHead->leftReadSet = GetReadSet(leftReadAddress, readSetHead->leftReadCount);
+    cout<<"middle"<<endl;
     readSetHead->rightReadSet = GetReadSet(rightReadAddress, readSetHead->rightReadCount);
-    
+    cout<<"GetEnd"<<endl;
     
     if(readSetHead->isPaired == true){
         ReverseComplementReadSet(readSetHead->leftReadSet, readSetHead->leftReadCount);
     }else{
         ReverseComplementReadSet(readSetHead->rightReadSet, readSetHead->rightReadCount);
     }
-    
     
     if(readSetHead->leftReadCount != 0){
         readSetHead->readLength = strlen(readSetHead->leftReadSet[0].read);

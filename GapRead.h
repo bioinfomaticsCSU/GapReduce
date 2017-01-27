@@ -63,7 +63,7 @@ typedef struct GapRegionReadSet{
 
 GapRegionReadSet * GetReadSetInGapRegion(ScaffoldSetHead * scaffoldSetHead, char * endContigFile, char * endContigBamLeft, char * endContigBamRight, long int maxInsertSize, long int minInsertSize, long int intervalLength, bool isPairedRead);
 void WriteGapRegionReadSet(GapRegionReadSet * gapRegionReadSet, char * fileName);
-void FillSingleGapByRead(ScaffoldSetHead * scaffoldSetHead, GapRegionReadSet * gapRegionReadSet, long int libraryIndex);
+void FillSingleGapByRead(ScaffoldSetHead * scaffoldSetHead, GapRegionReadSet * gapRegionReadSet, long int libraryIndex, char * outputName);
 
 int KMPIndexOfContigOfMisMatch(char * contig, char * pattern);
 void SearchSharedKmerRead(ScaffoldSetHead * scaffoldSetHead, GapRegionReadSet * gapRegionReadSet);
