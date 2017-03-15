@@ -29,9 +29,6 @@ GetFinalScaffoldSet.o:	GetFinalScaffoldSet.cpp ScaffoldSet.h
 all: splitScaffoldSet fillGapRead GetFinalScaffoldFill
 	make all -C graph/
 	cp graph/fillGapRegion ./
-	make all -C evaluation/
-	make all -C ./evaluation/needleman_wunsch_code
-	cp evaluation/needleman_wunsch_code/needleman_wunsch ./evaluation/
 	rm -f *.o
 clean:
 	rm -f *.o
