@@ -47,7 +47,7 @@ GapReduce
 	Type "make all".
 
 4) Running
-
+```
 	Run command line:  
 	perl GapReduce.pl draft_sequence.fasta library.txt 
 	<draft_sequence.fasta>:
@@ -65,7 +65,7 @@ GapReduce
 		The 9-th column: an integer represents the step from large k-mer length to small k-mer length;
 		The 10-th column: an integer represents the largest k-mer frequency threshold for constructing de bruijn graph;
 		The 11-th column: denotes which mapping tool will be used, it equals 'bwa' or 'bowtie2';
-
+```
 4) Output:
 
 	The final filling result is named "scaffold_set_fill_gap.fa".
