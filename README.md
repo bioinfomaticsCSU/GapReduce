@@ -26,12 +26,12 @@ CHINA, 410083
 GapReduce
 =================
 1) Introduction
-
+```
 	GapReduce is a gap filling tool based on paired reads.
 	The input includes the draft sequences of a genome (scaffolds or contigs which have gaps), and one or multiple paired read sets. 
-
+```
 2) Before installing and running
-	
+```	
 	Users should install Bowtie2, BWA and Samtools firstly and add them to your PATH. GapReduce uses Bowtie2 or BWA map read to contigs in the step of scaffolding, and convert ".sam" file to ".bam" file. 
 	Users can download BWA from https://github.com/lh3/bwa
 	Users can download Bowtie2 from http://bowtie-bio.sourceforge.net/bowtie2/index.shtml 
@@ -39,13 +39,13 @@ GapReduce
 	Please type "bwa" to check whether BWA works.
 	Please type "bowtie2" to check whether Bowtie2 works.
 	Please type "samtools" to check whether samtool works.
-
+```
 3) Installing
-
+```
 	GapReduce is written C++ and therefore will require a machine with GNU C++ pre-installed.
 	Create a main directory (eg:GapReduce). Copy all source code to this directory.
 	Type "make all".
-
+```
 4) Running
 ```
 	Run command line:  
@@ -67,10 +67,11 @@ GapReduce
 		The 11-th column: denotes which mapping tool will be used, it equals 'bwa' or 'bowtie2';
 ```
 4) Output:
-
+```
 	The final filling result is named "scaffold_set_fill_gap.fa".
-
+```
 5) Example:
-
+```
 	one line in library.txt:
 	frag_1.fastq frag_2.fastq 101 180 20 0 61 31 15 2 bwa
+```
