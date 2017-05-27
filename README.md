@@ -44,7 +44,7 @@ GapReduce
 ```
 	GapReduce is written C++ and therefore will require a machine with GNU C++ pre-installed.
 	Create a main directory (eg:GapReduce). Copy all source code to this directory.
-	lease add current path to the enviroment variable LD_LIBRARY_PATH.
+	Please add current path to the enviroment variable LD_LIBRARY_PATH.
 	Type "make all".
 ```
 4) Running
