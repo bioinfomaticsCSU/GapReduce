@@ -42,7 +42,7 @@ GapReduce
 ```
 3) Installing
 ```
-	GapReduce is written C++ and therefore will require a machine with GNU C++ pre-installed.
+	GapReduce should run on Linux operating sysetm with gcc. We test GapReduce using gcc4.6.3 on Ubuntu.
 	Create a main directory (eg:GapReduce). Copy all source code to this directory.
 	Please add current path to the enviroment variable LD_LIBRARY_PATH.
 	Type "make all".
