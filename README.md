@@ -33,6 +33,7 @@ GapReduce
 2) Before installing and running
 ```	
 	Users should install Bowtie2, BWA and Samtools firstly and add them to your PATH. GapReduce uses Bowtie2 or BWA map read to contigs in the step of scaffolding, and convert ".sam" file to ".bam" file. 
+	Please build and install bamtools from https://github.com/pezmaster31/bamtools. And add enviroment vairable BAMTOOLS_HOME which is the path of bamtools.
 	Users can download BWA from https://github.com/lh3/bwa
 	Users can download Bowtie2 from http://bowtie-bio.sourceforge.net/bowtie2/index.shtml 
 	Samtools is available from http://samtools.sourceforge.net/index.shtml
@@ -44,8 +45,10 @@ GapReduce
 ```
 	GapReduce should run on Linux operating sysetm with gcc. We test GapReduce using gcc4.6.3 on Ubuntu.
 	Create a main directory (eg:GapReduce). Copy all source code to this directory.
-	Please add current path to the enviroment variable LD_LIBRARY_PATH.
-	Type "make all".
+	export BAMTOOLS_HOME=/path_bamtools/
+	cp /path_bamtools/lib/* /usr/lib/
+	cd GapReduce
+	make all
 ```
 4) Running
 ```
