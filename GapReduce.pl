@@ -1,32 +1,41 @@
 use strict;
-	if(@ARGV != 2){
+	if(@ARGV != 3){
 		die "\nPlease input correct command line:  
-perl GapReduce.pl draft_sequence.fasta library.txt 
+perl GapReduce.pl draft_sequence.fasta library.txt output_address
 <draft_sequence.fasta>:
 	The draft sequences of a genome.
 <library.txt>:
 	Each line represents one read library.
-	The first column: 
+	The 1-th column: 
 		the first mate read file (*.fastq);
-	The sencond column: 
+	The 2-th column: 
 		the second mate read file (*.fastq);
-	The third column: 
+	The 3-th column: 
 		length of read;
-	The fourth column: 
+	The 4-th column: 
 		insert size of read library;
-	The fifth column: 
+	The 5-th column: 
 		standard deviation of insert size;
-	The sixth column:  
+	The 6-th column:  
 		1 denotes paired-end reads, 0 denotes mate-paired reads;
-	The seventh column: 
-		a integer which should be shorter than read length;
-	The eighth column: 
-		a integer which should be shorter than read length and the 
-		integer of the seventh column; This integer is the length of 
-		the k-mers which are used for building de Bruijn graph; 
-	The ninth column: 
+	The 7-th column: 
+		the value of the large k-mer length which should be shorter 
+		than read length;
+	The 8-th column: 
+		the value of the small k-mer length which should be shorter than 
+		read length and the integer of the 7-th column;  
+	The 9-th column: 
+		an integer represents the step from large k-mer length to 
+		small k-mer length;
+	The 10-th column: 
+		an integer represents the largest k-mer frequency threshold for constructing
+		de bruijn graph;
+	The 11-th column: 
 		denotes which mapping tool will be used, it equals 
-		bwa or bowtie2;";
+		bwa or bowtie2;
+<output_address>:
+		The directory address of output files;
+";
 	}
 	
 	my $library_number = 0;
@@ -39,14 +48,26 @@ perl GapReduce.pl draft_sequence.fasta library.txt
 	my @library_sam;
 	my @library_bam;
 	
+	my @temp;
+	
 	my $scaffold_set = shift;
 	my $library_information = shift;
+	my $output_address = shift;
+	
+	if(-e $output_address){
+		unlink glob "$output_address/*";
+		unlink glob "$output_address/*";
+	}else{
+		mkdir($output_address);
+	}
 	my $min_gap_distance = 0;
 	my @large_kmer_length;
+	my @kmer_step;
+	my @large_fre;
 	my @kmer_length;
 	my @mapping_tool;
 	my $line;
-	my $infor_output = "infor.txt";
+	my $infor_output = "./$output_address/infor.txt";
 	my $max_insert_size = 0;
 	my $min_insert_size = 0;
 	my $end_contig_length = 0;
@@ -69,20 +90,22 @@ perl GapReduce.pl draft_sequence.fasta library.txt
 		$library_orientation[$library_number]=$infor[5];
 		$large_kmer_length[$library_number]=$infor[6];
 		$kmer_length[$library_number]=$infor[7];
-		$mapping_tool[$library_number]=$infor[8];
+		$kmer_step[$library_number]=$infor[8];
+		$large_fre[$library_number]=$infor[9];
+		$mapping_tool[$library_number]=$infor[10];
 		$library_number++;
 	}
 	
 	my $folder;
-	my $contig_set = "contig_set.fa";
-	my $end_contig_set = "end_contig_set.fa";
+	my $contig_set = "./$output_address/contig_set.fa";
+	my $end_contig_set = "./$output_address/end_contig_set.fa";
 	my $interval_length = 500;
-	my $gap_information = "gap_information.fa";
+	my $gap_information = "./$output_address/gap_information.fa";
 	
-	my $scaffold_end_contig_index = "scaffold_end_contig_index.fa";
-	my $scaffold_set_fill_gap = "scaffold_set_fill_gap.fa";
+	my $scaffold_end_contig_index = "./$output_address/scaffold_end_contig_index.fa";
+	my $scaffold_set_fill_gap = "./$output_address/scaffold_set_fill_gap.fa";
 	
-	my @temp;
+	
 	
 	for(my $k=0;$k<$library_number;$k++){
 		$real_iterative_count = 0;
@@ -95,11 +118,11 @@ perl GapReduce.pl draft_sequence.fasta library.txt
 			if($k != 0 || $real_iterative_count != 0){
 				$scaffold_set = $scaffold_set_fill_gap;
 			}
-			
-			print OUT "./splitScaffoldSet $scaffold_set $min_gap_distance $gap_information $contig_set $end_contig_length $interval_length $end_contig_set\n";
-			@temp = ("./splitScaffoldSet $scaffold_set $min_gap_distance $gap_information $contig_set $end_contig_length $interval_length $end_contig_set");
+	
+			print OUT "./splitScaffoldSet $scaffold_set $min_gap_distance $gap_information $contig_set $end_contig_length $interval_length $end_contig_set $scaffold_end_contig_index\n";
+			@temp = ("./splitScaffoldSet $scaffold_set $min_gap_distance $gap_information $contig_set $end_contig_length $interval_length $end_contig_set $scaffold_end_contig_index");
 			`@temp`;
-			
+	
 			my $current_iterative_count;
 			my $all_gap_length = 0;
 			my $gap_length_max_insertsize = 0;
@@ -128,6 +151,9 @@ perl GapReduce.pl draft_sequence.fasta library.txt
 			}
 			if($real_iterative_count == 0){
 				$iterative_count = $max_gap_distance/(2*($library_insertsize[$k] - $library_readLength[$k]));
+				if($iterative_count > 3){
+					$iterative_count = 3;
+				}
 			}else{
 				if($previous_all_gap_length - $all_gap_length < 200){
 					$iterative_count = 1;
@@ -135,27 +161,40 @@ perl GapReduce.pl draft_sequence.fasta library.txt
 			}
 			$previous_all_gap_length = $all_gap_length;
 			
-			$library_sam[2*$k] = "library_$k"."_left.sam";
-			$library_sam[2*$k+1] = "library_$k"."_right.sam";
-			$library_bam[2*$k] = "library_$k"."_left.bam";
-			$library_bam[2*$k+1] = "library_$k"."_right.bam";
+			$library_sam[2*$k] = "./$output_address/library_$k"."_left.sam";
+			$library_sam[2*$k+1] = "./$output_address/library_$k"."_right.sam";
+			$library_bam[2*$k] = "./$output_address/library_$k"."_left.bam";
+			$library_bam[2*$k+1] = "./$output_address/library_$k"."_right.bam";
 			if($mapping_tool[$k] eq "bowtie2"){
-				@temp = ("bowtie2-build $end_contig_set contigs");
+				@temp = ("bowtie2-build $end_contig_set ./$output_address/contigs");
 				system(@temp) == 0 or die "\nThe command 'bowtie2-build' can not be found! Please install the mapping tool BWA\n";;
-				@temp = ("bowtie2 -x contigs $library_name[2*$k] -S $library_sam[2*$k]");
+				@temp = ("bowtie2 -x ./$output_address/contigs $library_name[2*$k] -S $library_sam[2*$k] 2>&-");
 				`@temp`;
-				@temp = ("bowtie2 -x contigs $library_name[2*$k+1] -S $library_sam[2*$k+1]");
+				@temp = ("bowtie2 -x ./$output_address/contigs $library_name[2*$k+1] -S $library_sam[2*$k+1] 2>&-");
 				`@temp`;
 			}
 			if($mapping_tool[$k] eq "bwa"){
 				@temp = ("bwa index $end_contig_set");
+				
 				system(@temp) == 0 or die "\nThe command 'bwa' can not be found! Please install the mapping tool BWA\n";
-				@temp = ("bwa mem $end_contig_set $library_name[2*$k] > $library_sam[2*$k]");
-				`@temp`;
-				@temp = ("bwa mem $end_contig_set $library_name[2*$k+1] > $library_sam[2*$k+1]");
-				`@temp`;
+				if($library_readLength[$k] > 33){
+					@temp = ("bwa mem $end_contig_set $library_name[2*$k] > $library_sam[2*$k] 2>&-");
+					`@temp`;
+					@temp = ("bwa mem $end_contig_set $library_name[2*$k+1] > $library_sam[2*$k+1] 2>&-");
+					`@temp`;
+				}else{
+					@temp = ("bwa aln $end_contig_set $library_name[2*$k] > ./$output_address/reads.sai 2>&-");
+					`@temp`;
+					@temp = ("bwa samse $end_contig_set ./$output_address/reads.sai $library_name[2*$k] > $library_sam[2*$k] 2>&-");
+					`@temp`;
+					
+					@temp = ("bwa aln $end_contig_set $library_name[2*$k+1] > ./$output_address/reads.sai 2>&-");
+					`@temp`;
+					@temp = ("bwa samse $end_contig_set ./$output_address/reads.sai $library_name[2*$k+1] > $library_sam[2*$k+1] 2>&-");
+					`@temp`;
+				}
+				
 			}
-			
 			@temp = ("samtools view -Sb $library_sam[2*$k] > $library_bam[2*$k]");
 			system(@temp) == 0 or die "\nThe command 'samtools' can not be found! Please install the tool Samtools\n";
 			@temp = ("samtools view -Sb $library_sam[2*$k+1] > $library_bam[2*$k+1]");
@@ -164,25 +203,25 @@ perl GapReduce.pl draft_sequence.fasta library.txt
 			unlink glob $library_sam[2*$k];
 			unlink glob $library_sam[2*$k+1];
 			
-			unlink glob "contigs.*";
+			unlink glob "./$output_address/contigs.*";
 			
 			$max_insert_size = $library_insertsize[$k] + 3*$library_std[$k];
 			$min_insert_size = $library_insertsize[$k] - 3*$library_std[$k];
-			$folder = "gap_read_out_put_$k";
+			$folder = "./$output_address/gap_read_out_put_$k";
 			if(-e $folder){
 				unlink glob "$folder/*";
 				unlink glob "$folder/*";
 			}else{
 				mkdir($folder);
 			}
-			print OUT "./fillGapRead $scaffold_set $contig_set $min_gap_distance $library_bam[2*$k] $library_bam[2*$k+1] $max_insert_size $min_insert_size $interval_length $library_orientation[$k] $k\n";
-			@temp = ("./fillGapRead $scaffold_set $contig_set $min_gap_distance $library_bam[2*$k] $library_bam[2*$k+1] $max_insert_size $min_insert_size $interval_length $library_orientation[$k] $k");
+			print OUT "./fillGapRead $scaffold_set $contig_set $min_gap_distance $library_bam[2*$k] $library_bam[2*$k+1] $max_insert_size $min_insert_size $interval_length $library_orientation[$k] $k $output_address\n";
+			@temp = ("./fillGapRead $scaffold_set $contig_set $min_gap_distance $library_bam[2*$k] $library_bam[2*$k+1] $max_insert_size $min_insert_size $interval_length $library_orientation[$k] $k $output_address");
 			`@temp`;
 			
 			unlink $library_bam[2*$k], $library_bam[2*$k+1];
 			
-			my $gap_region = "fill_gap_region.fa";
-			my $fill_gap_region = "fill_gap_region.fa";
+			my $gap_region = "./$output_address/fill_gap_region.fa";
+			my $fill_gap_region = "./$output_address/fill_gap_region.fa";
 			my $fill_parameter;
 			
 			if(-e $fill_gap_region){
@@ -194,14 +233,14 @@ perl GapReduce.pl draft_sequence.fasta library.txt
 				my $left_gap_read = "leftReadSet_gapIndex_$t.fa";
 				my $right_gap_read = "rightReadSet_gapIndex_$t.fa";
 				
-				$folder = "./gap_read_out_put_$k/";
+				$folder = "./$output_address/gap_read_out_put_$k/";
 				$left_gap_read = $folder.$left_gap_read;
 				$right_gap_read = $folder.$right_gap_read;
 				$fill_parameter = $fill_parameter.' '.$left_gap_read.' '.$right_gap_read.' '.$library_insertsize[$k].' '.$library_std[$k].' '.$library_orientation[$k];
 				
 				$fill_parameter = $fill_parameter.' '.$large_kmer_length[$k].' '.$kmer_length[$k].' '.$gap_left_contig_index[$t].' '.$gap_right_contig_index[$t].' '.$gap_distance[$t];
-				print OUT "$fill_parameter\n";
-				@temp = ("$fill_parameter");
+				print OUT "$fill_parameter $fill_gap_region $contig_set\n";
+				@temp = ("$fill_parameter $fill_gap_region $contig_set $kmer_step[$k] $large_fre[$k] >> ./$output_address/out.fa");
 				`@temp`;
 			}
 			
@@ -212,7 +251,7 @@ perl GapReduce.pl draft_sequence.fasta library.txt
 			$iterative_count--;
 		}
 	}
-	unlink "graph.fa", "fill_gap_region.fa", "scaffold_end_contig_index.fa", "gap_information.fa", "end_contig_set.fa", "contig_set.fa";
+	#unlink "graph.fa", "fill_gap_region.fa", "scaffold_end_contig_index.fa", "gap_information.fa", "end_contig_set.fa", "contig_set.fa";
 	
 	
 	
