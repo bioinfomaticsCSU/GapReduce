@@ -24,7 +24,7 @@ GetFinalScaffoldFill:	GetFinalScaffoldSet.o ScaffoldSet.o
 	$(CC) -o $@ $^ -I $(BAMTOOLS_HOME)/include -L $(BAMTOOLS_HOME)/lib -lbamtools -std=gnu++98
 	
 GetFinalScaffoldSet.o:	GetFinalScaffoldSet.cpp ScaffoldSet.h
-	$(CC) -c GetFinalScaffoldSet.cpp -I $(BAMTOOLS_HOME)/include -L $(BAMTOOLS_HOME)/lib lbamtools -std=gnu++98
+	$(CC) -c GetFinalScaffoldSet.cpp -I $(BAMTOOLS_HOME)/include -L $(BAMTOOLS_HOME)/lib -lbamtools -std=gnu++98
 	
 all: splitScaffoldSet fillGapRead GetFinalScaffoldFill
 	make all -C graph/
