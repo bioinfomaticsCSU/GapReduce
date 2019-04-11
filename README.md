@@ -45,8 +45,8 @@ GapReduce
 ```
 	GapReduce should run on Linux operating sysetm with gcc. We test GapReduce using gcc4.6.3 on Ubuntu.
 	Create a main directory (eg:GapReduce). Copy all source code to this directory.
-	export BAMTOOLS_HOME=/path_bamtools/
-	cp /path_bamtools/lib/* /usr/lib/
+	export BAMTOOLS_HOME_INCLUDE=/path_bamtools_include_api_shared/
+	export BAMTOOLS_HOME_LIB=/path_bamtools_lib_libbamtools.a/
 	cd GapReduce
 	make all
 ```
