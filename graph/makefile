@@ -14,7 +14,7 @@ dataSet.o: dataSet.cpp dataSet.h
 graph.o: graph.cpp dataSet.h graph.h
 	$(CC) -c graph.cpp
 	
-fillGap.o: fillGap.o dataSet.h graph.h fillGap.h
+fillGap.o: fillGap.h dataSet.h graph.h fillGap.h
 	$(CC) -c fillGap.cpp
 	
 all: fillGapRegion 
