@@ -3,28 +3,28 @@ CC=g++
 CPPFLAGS = -g -Wall -O3
 
 splitScaffoldSet:	SplitScaffoldToContig.o ScaffoldSet.o 
-	$(CC) -o $@ $^ -I $(BAMTOOLS_HOME)/include -L $(BAMTOOLS_HOME)/lib -lbamtools -std=gnu++98
+	$(CC) -o $@ $^ -I $(BAMTOOLS_HOME_INCLUDE)/ $(BAMTOOLS_HOME_LIB)/libbamtools.a
 	
 fillGapRead:	FillGapRead.o GapRead.o ScaffoldSet.o 
-	$(CC) -o $@ $^ -lm -ldl -I $(BAMTOOLS_HOME)/include -L $(BAMTOOLS_HOME)/lib -lbamtools -std=gnu++98
+	$(CC) -o $@ $^ -lm -ldl -I $(BAMTOOLS_HOME_INCLUDE)/ $(BAMTOOLS_HOME_LIB)/libbamtools.a
 
 SplitScaffoldToContig.o: SplitScaffoldToContig.cpp ScaffoldSet.h 
-	$(CC) -c SplitScaffoldToContig.cpp -I $(BAMTOOLS_HOME)/include -L $(BAMTOOLS_HOME)/lib -lbamtools -std=gnu++98
+	$(CC) -c SplitScaffoldToContig.cpp -I $(BAMTOOLS_HOME_INCLUDE)/ $(BAMTOOLS_HOME_LIB)/libbamtools.a
 
 FillGapRead.o: FillGapRead.cpp GapRead.h ScaffoldSet.h 
-	$(CC) -c FillGapRead.cpp -lm -ldl -I $(BAMTOOLS_HOME)/include -L $(BAMTOOLS_HOME)/lib -lbamtools -std=gnu++98
+	$(CC) -c FillGapRead.cpp -lm -ldl -I $(BAMTOOLS_HOME_INCLUDE)/ $(BAMTOOLS_HOME_LIB)/libbamtools.a
 
 GapRead.o: GapRead.cpp ScaffoldSet.h
-	$(CC) -c GapRead.cpp -lm -ldl -I $(BAMTOOLS_HOME)/include -L $(BAMTOOLS_HOME)/lib -lbamtools -std=gnu++98
+	$(CC) -c GapRead.cpp -lm -ldl -I $(BAMTOOLS_HOME_INCLUDE)/ $(BAMTOOLS_HOME_LIB)/libbamtools.a
 	
 ScaffoldSet.o: ScaffoldSet.cpp ScaffoldSet.h
-	$(CC) -c ScaffoldSet.cpp -I $(BAMTOOLS_HOME)/include -L $(BAMTOOLS_HOME)/lib -lbamtools -std=gnu++98
+	$(CC) -c ScaffoldSet.cpp -I $(BAMTOOLS_HOME_INCLUDE)/ $(BAMTOOLS_HOME_LIB)/libbamtools.a
 
 GetFinalScaffoldFill:	GetFinalScaffoldSet.o ScaffoldSet.o
-	$(CC) -o $@ $^ -I $(BAMTOOLS_HOME)/include -L $(BAMTOOLS_HOME)/lib -lbamtools -std=gnu++98
+	$(CC) -o $@ $^ -I $(BAMTOOLS_HOME_INCLUDE)/ $(BAMTOOLS_HOME_LIB)/libbamtools.a
 	
 GetFinalScaffoldSet.o:	GetFinalScaffoldSet.cpp ScaffoldSet.h
-	$(CC) -c GetFinalScaffoldSet.cpp -I $(BAMTOOLS_HOME)/include -L $(BAMTOOLS_HOME)/lib -lbamtools -std=gnu++98
+	$(CC) -c GetFinalScaffoldSet.cpp -I $(BAMTOOLS_HOME_INCLUDE)/ $(BAMTOOLS_HOME_LIB)/libbamtools.a
 	
 all: splitScaffoldSet fillGapRead GetFinalScaffoldFill
 	make all -C graph/
